@@ -1,4 +1,4 @@
-$palettePath = 'models/Palette.png'
+$palettePath = 'sprites/Palette.png'
 $ditherMethod = 'None'
 
 $files = Get-ChildItem -Recurse -Path 'models/renders'

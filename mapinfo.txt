@@ -1,3 +1,4 @@
-gameinfo {
-    playerclasses = "MidgetPlayer"
+GameInfo {
+    PlayerClasses = "MidgetPlayer"
+    AddEventHandlers = "DropMaterials"
 }
