@@ -1,0 +1,24 @@
+OptionMenu "CraftingMenu" {
+    Title "Crafting"
+    Class "CraftingMenu"
+
+    ScrollTop 13
+    DefaultSelection 12
+
+    StaticText "Required materials:"
+    RequiredMaterials
+    StaticText " "
+    StaticText " "
+    StaticText " "
+    StaticText " "
+
+    StaticText "Owned materials:"
+    OwnedMaterials
+    StaticText " "
+
+    CanCraft
+    StaticText " "
+
+    StaticText "Choose a recipe:"
+    StaticText " "
+}

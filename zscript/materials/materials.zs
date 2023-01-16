@@ -1,47 +1,22 @@
-class Materials : Thinker {
-    array<Material> m_list;
-    
-    static Materials Get() {
-        let it = ThinkerIterator.Create("Materials", STAT_STATIC);
-
-        let materials = Materials(it.Next());
-        
-        if (!materials) {
-            array<Material> list;
-
-            for (int i = 0; i < AllClasses.Size(); i++) {
-                let clazz = AllClasses[i];
-
-                if (!(class<Material>)(clazz)) {
-                    continue;
-                }
-
-                let material = Material(new(clazz));
-                material.Init();
-
-                if (material.m_name != "Base" && material.m_rarity > 0.0) {
-                    list.Push(material);
-                }
-            }
-
-            materials = new("Materials");
-            materials.m_list.Move(list);
-            materials.ChangeStatNum(STAT_STATIC);
-        }
-
-        return materials;
-    }
-}
-
-class Material {
+class Material : Thinker {
     string m_name;
-    
+
     // The average number of kills required for the material to drop.
     float m_rarity;
 
     virtual void Init() {
-        m_name = "Base";
-        m_rarity = 0.0;
+    }
+
+    static void Populate() {
+        for (int i = 0; i < AllClasses.Size(); i++) {
+            let clazz = AllClasses[i];
+
+            if ((class<Material>)(clazz) && clazz != "Material") {
+                let material = Material(new(clazz));
+                material.ChangeStatNum(STAT_STATIC);
+                material.Init();
+            }
+        }
     }
 }
 
@@ -54,7 +29,7 @@ class MatWoodenStick : Material {
 
 class MatIronBar : Material {
     override void Init() {
-        m_name = "Iron bar";
+        m_name = "Bar of iron";
         m_rarity = 12.0;
     }
 }

@@ -1,4 +1,6 @@
 GameInfo {
     PlayerClasses = "MidgetPlayer"
+    AddEventHandlers = "InitStatics"
     AddEventHandlers = "DropMaterials"
+    AddEventHandlers = "CraftingMenuEventHandler"
 }

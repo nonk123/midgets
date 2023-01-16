@@ -22,7 +22,7 @@ class Pickaxe : MidgetWeapon {
         +Weapon.NoAlert
     }
 
-    action void Mine() {
+    action void A_Mine() {
         A_CustomPunch(64, true, CPF_NORANDOMPUFFZ, "PickaxePuff", 64, 0.0, 0.0, "ArmorBonus", "weapons/pickaxe/hit");
     }
 
@@ -42,7 +42,7 @@ class Pickaxe : MidgetWeapon {
             PICK B 7 A_WeaponOffset(32.0, -32.0, WOF_ADD);
             PICK C 1 A_StartSound("weapons/pickaxe/swing", CHAN_WEAPON);
             #### # 6 A_WeaponOffset(-64.0, 80.0, WOF_ADD);
-            #### # 1 Mine();
+            #### # 1 A_Mine();
             #### # 3;
             #### # 4 A_WeaponOffset(16.0, -16.0, WOF_ADD);
             PICK A 5 A_WeaponOffset(16.0, -16.0, WOF_ADD);

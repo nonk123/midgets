@@ -1,10 +1,5 @@
-class MaterialCount {
-    Material m_material;
-    int m_count;
-}
-
 class MidgetPlayer : PlayerPawn {
-    array<MaterialCount> m_materials;
+    MaterialsList m_materials;
 
     Default {
         Speed 0.8;
@@ -18,20 +13,30 @@ class MidgetPlayer : PlayerPawn {
         Player.StartItem "Pickaxe";
         Player.WeaponSlot 1, "Pickaxe";
     }
-    
-    void AddMaterial(Material material, int count) {
-        for (int i = 0; i < m_materials.Size(); i++) {
-            let material_count = m_materials[i];
 
-            if (material_count.m_material == material) {
-                material_count.m_count += count;
-                return;
-            }
+    override void BeginPlay() {
+        m_materials = new("MaterialsList");
+        super.BeginPlay();
+    }
+
+    bool PressingCraft() {
+        return player.cmd.buttons & BT_USER1;
+    }
+
+    bool HoldingCraft() {
+        return player.oldbuttons & BT_USER1;
+    }
+
+    override void Tick() {
+        if (!player || !player.mo || player.mo != self) {
+            Super.Tick();
+            return;
         }
-        
-        let material_count = new("MaterialCount");
-        material_count.m_material = material;
-        material_count.m_count = count;
-        m_materials.Push(material_count);
+
+        if (PressingCraft() && !HoldingCraft()) {
+            Menu.SetMenu("CraftingMenu");
+        }
+
+        Super.Tick();
     }
 }
