@@ -1,6 +1,14 @@
 class MaterialCount {
     Material m_material;
     int m_count;
+
+    string Format() {
+        return String.Format("x%d %s", m_count, m_material.m_name);
+    }
+
+    string FormatLn() {
+        return Format() .. "\n";
+    }
 }
 
 class MaterialsList : Thinker {

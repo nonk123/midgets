@@ -65,10 +65,23 @@ class RecipeTest1 : Recipe {
 class RecipeTest2 : Recipe {
     override void Init() {
         m_name = "Test2";
+        AddMaterial("MatWoodenStick", 2);
         AddMaterial("MatRock", 2);
     }
 
     override RecipeOutput Craft() {
         return RecipeOutput.Weapon("Shotgun");
+    }
+}
+
+class RecipeTest3 : Recipe {
+    override void Init() {
+        m_name = "Test3";
+        AddMaterial("MatWoodenStick", 4);
+        AddMaterial("MatIronBar", 2);
+    }
+
+    override RecipeOutput Craft() {
+        return RecipeOutput.Weapon("Chaingun");
     }
 }

@@ -1,15 +1,10 @@
 OptionMenu "CraftingMenu" {
     Title "Crafting"
     Class "CraftingMenu"
-
-    ScrollTop 13
-    DefaultSelection 12
+    Animated
 
     StaticText "Required materials:"
     RequiredMaterials
-    StaticText " "
-    StaticText " "
-    StaticText " "
     StaticText " "
 
     StaticText "Owned materials:"
