@@ -1,9 +1,8 @@
 OptionMenu "CraftingMenu" {
     Title "Crafting"
     Class "CraftingMenu"
-    Animated
 
-    StaticText "Required materials:"
+    RequiredMaterialsText
     RequiredMaterials
     StaticText " "
 

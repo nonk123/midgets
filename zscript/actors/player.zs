@@ -39,4 +39,27 @@ class MidgetPlayer : PlayerPawn {
 
         Super.Tick();
     }
+
+    override bool CanTouchItem(Inventory item) {
+        if (!(item is "Weapon")) {
+            return true;
+        }
+
+        let it = ThinkerIterator.Create("DisassemblyRecipe", STAT_STATIC);
+        DisassemblyRecipe recipe;
+
+        while (recipe = DisassemblyRecipe(it.Next())) {
+            if (recipe.m_resultingItem == item.GetClassName()) {
+                recipe.GiveResult(self);
+                item.Destroy();
+
+                A_Log("\cgDisassembled " .. recipe.m_weaponName);
+                A_StartSound(recipe.m_craftSound, CHAN_ITEM);
+
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

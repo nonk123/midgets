@@ -2,7 +2,8 @@ class MaterialPickup : Inventory {
     Material m_material;
 
     override string PickupMessage() {
-        return "You got a " .. m_material.m_name .. "!";
+        let a = m_material.m_an ? "an" : "a";
+        return String.Format("You got %s %s!", a, m_material.m_name);
     }
 
     override void AttachToOwner(Actor other) {

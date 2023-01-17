@@ -1,0 +1,2 @@
+server string mdgt_weaponrecipe_Pistol = "Pistol:2:Wooden Stick:2:Iron Bar";
+server string mdgt_weaponrecipe_Shotgun = "Shotgun:5:Wooden Stick:4:Iron Bar";

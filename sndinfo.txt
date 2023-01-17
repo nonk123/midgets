@@ -1,2 +1,4 @@
-weapons/pickaxe/swing pckswing
-weapons/pickaxe/hit pckhit
+weapons/pickaxe/swing = pckswing
+weapons/pickaxe/hit = pckhit
+misc/disassembly = disass
+misc/assembly = disass

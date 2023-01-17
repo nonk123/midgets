@@ -8,6 +8,10 @@ class DropMaterials : EventHandler {
         Material material;
 
         while (material = Material(materialsIt.Next())) {
+            if (material.m_rarity < 0.0) {
+                continue;
+            }
+
             let probability = 1.0 / material.m_rarity;
             let result = FRandom[MaterialRng](0.0, 1.0);
 
@@ -15,7 +19,7 @@ class DropMaterials : EventHandler {
                 continue;
             }
 
-            let pickup = MaterialPickup(Actor.Spawn("MaterialPickup", event.thing.Pos));
+            let pickup = MaterialPickup(Actor.Spawn("MaterialPickup", event.thing.pos));
 
             if (!pickup) {
                 continue;

@@ -11,7 +11,7 @@ class MaterialCount {
     }
 }
 
-class MaterialsList : Thinker {
+class MaterialsList {
     array<MaterialCount> m_materials;
 
     int Count(Material material) {
