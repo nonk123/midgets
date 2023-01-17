@@ -56,7 +56,7 @@ class CraftingMenu : OptionMenu {
     }
 
     int GetBottommostHeaderItemIdx() {
-        return m_root.mItems.Find(m_recipes);
+        return m_root.mItems.Find(m_recipes) + 1;
     }
 
     Recipe GetSelectedRecipe() {
@@ -150,22 +150,75 @@ class CraftingMenu : OptionMenu {
         super.Ticker();
 
         let old = m_root.mScrollTop;
-        m_root.mScrollTop = GetBottommostHeaderItemIdx() + 1;
+        m_root.mScrollTop = GetBottommostHeaderItemIdx();
 
         if (isDirty) {
-            m_root.mSelectedItem = m_root.mScrollTop;
+            m_root.mSelectedItem = m_root.mScrollTop + 1;
         } else {
             m_root.mSelectedItem += m_root.mScrollTop - old;
         }
+    }
+
+    override bool MenuEvent(int menuKey, bool fromController) {
+        let old = m_recipes.m_typeIdx;
+
+        switch (menuKey) {
+        case MKEY_LEFT:
+            m_recipes.m_typeIdx--;
+            break;
+        case MKEY_RIGHT:
+            m_recipes.m_typeIdx++;
+            break;
+        default:
+            return super.MenuEvent(menuKey, fromController);
+        }
+
+        if (m_recipes.m_typeIdx != old) {
+            MenuSound("menu/cursor");
+        }
+
+        return true;
     }
 }
 
 class OptionMenuItemPlaceRecipesBelow : OptionMenuItem {
     array<OptionMenuItemRecipe> m_recipes;
 
+    int m_typeIdx;
+    OptionMenuItemStaticText m_category;
+
     void Init() {
         mCentered = true;
         mAction = "PlaceRecipesBelow";
+        m_typeIdx = 0;
+
+        m_category = new("OptionMenuItemStaticText");
+        m_category.Init("");
+
+        let menu = CraftingMenu(Menu.GetCurrentMenu());
+    }
+
+    RecipeType GetRecipeType() {
+        let it = ThinkerIterator.Create("RecipeType", Thinker.STAT_STATIC);
+        RecipeType type;
+
+        int i = 0;
+
+        for (; type = RecipeType(it.Next()); i++) {
+            if (i == m_typeIdx) {
+                break;
+            }
+        }
+
+        if (type) {
+            return type;
+        } else if (m_typeIdx < 0) {
+            m_typeIdx = i - 1;
+        } else {
+            m_typeIdx = 0;
+        }
+
+        return GetRecipeType();
     }
 
     bool Populate() {
@@ -176,20 +229,29 @@ class OptionMenuItemPlaceRecipesBelow : OptionMenuItem {
         let playerInfo = players[consolePlayer];
         let player = MidgetPlayer(playerInfo.mo);
 
+        if (menu.m_root.mItems.Find(m_category) == menu.m_root.mItems.Size()) {
+            menu.m_root.mItems.Push(m_category);
+        }
+
         for (int i = m_recipes.Size() - 1; i >= 0; i--) {
             let idx = menu.m_root.mItems.Find(m_recipes[i]);
             menu.m_root.mItems.Delete(idx);
             m_recipes.Delete(i);
         }
 
+        let recipeType = GetRecipeType();
+        m_category.mLabel = recipeType.GetCategoryName();
+
         let start = menu.m_root.mItems.Find(self);
-        let offset = 1;
+
+        let baseOffset = 2;
+        let offset = baseOffset;
 
         let it = ThinkerIterator.Create("Recipe", Thinker.STAT_STATIC);
         Recipe recipe;
 
         for (int i = 0; recipe = Recipe(it.Next()); i++) {
-            if (!player || !recipe.Display(player)) {
+            if (!player || recipe.m_type != recipeType || !recipe.Display(player)) {
                 if (recipe.WasDisplayed()) {
                     isDirty = true;
                 }
@@ -204,6 +266,13 @@ class OptionMenuItemPlaceRecipesBelow : OptionMenuItem {
             m_recipes.Push(item);
 
             offset++;
+        }
+
+        if (m_recipes.Size() == 0) {
+            let item = new("OptionMenuItemNoRecipesAvailable");
+            item.Init();
+            menu.m_root.mItems.Insert(start + baseOffset, item);
+            m_recipes.Push(item);
         }
 
         return isDirty;
@@ -227,7 +296,7 @@ class OptionMenuItemRecipe : OptionMenuItemSubmenu {
             recipe = Recipe(it.Next());
         }
 
-        super.Init(recipe.m_name, "", true);
+        super.Init(recipe.m_name, "", 0, true);
     }
 
     override bool Activate() {
@@ -249,6 +318,16 @@ class OptionMenuItemRecipe : OptionMenuItemSubmenu {
     }
 }
 
+class OptionMenuItemNoRecipesAvailable : OptionMenuItemRecipe {
+    void Init() {
+        super.Init(0);
+    }
+
+    override bool Activate() {
+        return false;
+    }
+}
+
 class OptionMenuItemRequiredMaterialsText : OptionMenuItemStaticText {
     void Init() {
         super.Init("");
@@ -263,7 +342,7 @@ class OptionMenuItemMultilineStaticText : OptionMenuItemStaticText {
         super.Init(text);
     }
 
-    void UpdateLines() {
+    virtual void UpdateLines() {
         let menu = CraftingMenu(Menu.GetCurrentMenu());
         let ourIdx = menu.m_root.mItems.Find(self);
 
@@ -293,6 +372,14 @@ class OptionMenuItemRequiredMaterials : OptionMenuItemMultilineStaticText {
     void Init() {
         super.Init();
         mAction = "RequiredMaterials";
+    }
+
+    override void UpdateLines() {
+        if (!mLabel) {
+            mLabel = "No recipe selected";
+        }
+
+        super.UpdateLines();
     }
 }
 

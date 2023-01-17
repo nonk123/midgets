@@ -2,6 +2,9 @@ OptionMenu "CraftingMenu" {
     Title "Crafting"
     Class "CraftingMenu"
 
+    StaticText "Left/right to change category"
+    StaticText " "
+
     RequiredMaterialsText
     RequiredMaterials
     StaticText " "

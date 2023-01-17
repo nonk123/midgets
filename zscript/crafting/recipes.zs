@@ -81,8 +81,17 @@ class Recipe : Thinker {
     }
 }
 
+class NoRecipe : Recipe {
+    override bool CanCraft(MidgetPlayer player) {
+        return false;
+    }
+}
+
 class RecipeType : Thinker abstract {
     static void Populate() {
+        let noRecipe = new("NoRecipe");
+        noRecipe.Init("No recipes available in this category", "Inventory");
+
         for (int i = 0; i < AllClasses.Size(); i++) {
             let cls = AllClasses[i];
 
@@ -112,6 +121,8 @@ class RecipeType : Thinker abstract {
     }
 
     protected abstract void InitRecipes();
+
+    ui abstract string GetCategoryName();
 }
 
 class WeaponRecipe : Recipe {
@@ -193,6 +204,10 @@ class RTWeapon: RecipeType {
             }
         }
     }
+
+    override string GetCategoryName() {
+        return "Weapons";
+    }
 }
 
 class DisassemblyRecipe : Recipe {
@@ -253,5 +268,9 @@ class RTDisassembly : RecipeType {
                 recipe.AddMaterial(materials[i].m_material, count);
             }
         }
+    }
+
+    override string GetCategoryName() {
+        return "Disassembly";
     }
 }
