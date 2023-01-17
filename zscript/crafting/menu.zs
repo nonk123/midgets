@@ -43,8 +43,8 @@ class CraftingMenu : OptionMenu {
     OptionMenuItemMultilineStaticText m_required;
     OptionMenuItemMultilineStaticText m_owned;
     OptionMenuItemCanCraft m_canCraft;
+    OptionMenuItemPlaceRecipesBelow m_recipes;
 
-    array<OptionMenuItemRecipe> m_recipes;
     bool m_bCanCraft;
 
     override void Init(Menu parent, OptionMenuDescriptor root) {
@@ -55,71 +55,70 @@ class CraftingMenu : OptionMenu {
         m_required = OptionMenuItemMultilineStaticText(GetItem("RequiredMaterials"));
         m_owned = OptionMenuItemMultilineStaticText(GetItem("OwnedMaterials"));
         m_canCraft = OptionMenuItemCanCraft(GetItem("CanCraft"));
-
-        UpdateLayout();
+        m_recipes = OptionMenuItemPlaceRecipesBelow(GetItem("PlaceRecipesBelow"));
     }
 
-    int GetSelectedRecipeIdx() {
-        return m_root.mSelectedItem - m_root.mItems.Find(m_canCraft) - 3;
+    int GetBottommostHeaderItemIdx() {
+        return m_root.mItems.Find(m_recipes);
     }
 
     Recipe GetSelectedRecipe() {
+        let recipeItemIdx = m_root.mSelectedItem;
+
+        if (recipeItemIdx < 0 || recipeItemIdx >= m_root.mItems.Size()) {
+            return null;
+        }
+
+        let recipeItem = OptionMenuItemRecipe(m_root.mItems[recipeItemIdx]);
+
+        if (!recipeItem) {
+            return null;
+        }
+
         let it = ThinkerIterator.Create("Recipe", Thinker.STAT_STATIC);
         Recipe recipe;
 
-        for (int i = 0; i <= GetSelectedRecipeIdx(); i++) {
+        for (int i = 0; i <= recipeItem.m_recipeIdx; i++) {
             recipe = Recipe(it.Next());
         }
 
         return recipe;
     }
 
-    void UpdateLayout() {
-        let recipesBegin = m_root.mItems.Find(m_canCraft) + 3;
-
-        if (m_root.mItems.Size() <= recipesBegin) {
-            let it = ThinkerIterator.Create("Recipe", Thinker.STAT_STATIC);
-            Recipe recipe;
-
-            for (int i = 0; recipe = Recipe(it.Next()); i++) {
-                if (recipe.GetClassName() != "Recipe") {
-                    let item = new("OptionMenuItemRecipe");
-                    item.Init(i);
-                    m_root.mItems.Push(item);
-                }
-            }
-
-            m_root.mSelectedItem = -1;
-        }
-
+    void UpdateMaterials() {
         let playerInfo = players[consolePlayer];
         let player = MidgetPlayer(playerInfo.mo);
 
-        if (!player) {
-            return;
-        }
-
         let materialsList = "";
 
-        for (int i = 0; i < player.m_materials.m_materials.Size(); i++) {
-            let materialCount = player.m_materials.m_materials[i];
-            materialsList = materialsList .. materialCount.FormatLn();
-        }
+        if (player) {
+            for (int i = 0; i < player.m_materials.m_materials.Size(); i++) {
+                let materialCount = player.m_materials.m_materials[i];
+                materialsList = materialsList .. materialCount.FormatLn();
+            }
 
-        if (materialsList) {
-            // Get rid of the trailing newline.
-            materialsList.DeleteLastCharacter();
+            if (materialsList) {
+                // Get rid of the trailing newline.
+                materialsList.DeleteLastCharacter();
+            } else {
+                materialsList = "None. You're poor!";
+            }
         } else {
-            materialsList = "None. You're poor!";
+            materialsList = "You're dead!";
         }
 
         m_owned.mLabel = materialsList;
         materialsList = "";
 
+        let selectedRecipe = GetSelectedRecipe();
+
+        if (!selectedRecipe) {
+            m_required.mLabel = "No recipe selected";
+            return;
+        }
+
         let recipesIt = ThinkerIterator.Create("Recipe", Thinker.STAT_STATIC);
         Recipe recipe;
-
-        let selectedRecipe = GetSelectedRecipe();
 
         while (recipe = Recipe(recipesIt.Next())) {
             if (recipe != selectedRecipe) {
@@ -133,6 +132,11 @@ class CraftingMenu : OptionMenu {
                 let requiredMaterial = requiredMaterialCount.m_material;
 
                 materialsList = materialsList .. requiredMaterialCount.FormatLn();
+
+                if (!player) {
+                    m_bCanCraft = false;
+                    continue;
+                }
 
                 let materialFound = false;
 
@@ -168,8 +172,8 @@ class CraftingMenu : OptionMenu {
         m_required.mLabel = materialsList;
     }
 
-    override void Ticker() {
-        UpdateLayout();
+    bool UpdateLayout() {
+        UpdateMaterials();
 
         for (int i = 0; i < m_root.mItems.Size(); i++) {
             if (m_root.mItems[i] is "OptionMenuItemMultilineStaticText") {
@@ -178,12 +182,75 @@ class CraftingMenu : OptionMenu {
             }
         }
 
+        let wasDirty = m_recipes.m_isDirty;
+        m_recipes.Populate();
+
+        return wasDirty;
+    }
+
+    override void Ticker() {
+        let recipesWasDirty = UpdateLayout();
+
         super.Ticker();
 
         let old = m_root.mScrollTop;
-        m_root.mScrollTop = m_root.mItems.Find(m_canCraft) + 4;
+        m_root.mScrollTop = GetBottommostHeaderItemIdx() + 1;
 
-        m_root.mSelectedItem += m_root.mScrollTop - old;
+        if (recipesWasDirty) {
+            m_root.mSelectedItem = m_root.mScrollTop;
+        } else {
+            m_root.mSelectedItem += m_root.mScrollTop - old;
+        }
+    }
+}
+
+class OptionMenuItemPlaceRecipesBelow : OptionMenuItem {
+    array<OptionMenuItemRecipe> m_recipes;
+    bool m_isDirty;
+
+    void Init() {
+        mCentered = true;
+        mAction = "PlaceRecipesBelow";
+        m_isDirty = true;
+    }
+
+    protected void PopulateImpl() {
+        let menu = CraftingMenu(Menu.GetCurrentMenu());
+
+        for (int i = m_recipes.Size() - 1; i >= 0; i--) {
+            let idx = menu.m_root.mItems.Find(m_recipes[i]);
+            menu.m_root.mItems.Delete(idx);
+            m_recipes.Delete(i);
+        }
+
+        let start = menu.m_root.mItems.Find(self);
+        let offset = 1;
+
+        let it = ThinkerIterator.Create("Recipe", Thinker.STAT_STATIC);
+        Recipe recipe;
+
+        for (int i = 0; recipe = Recipe(it.Next()); i++) {
+            if (recipe.GetClassName() != "Recipe") {
+                let item = new("OptionMenuItemRecipe");
+                item.Init(i);
+
+                menu.m_root.mItems.Insert(start + offset, item);
+                m_recipes.Push(item);
+
+                offset++;
+            }
+        }
+    }
+
+    void Populate() {
+        if (m_isDirty) {
+            PopulateImpl();
+            m_isDirty = false;
+        }
+    }
+
+    override bool Selectable() {
+        return false;
     }
 }
 
@@ -229,7 +296,7 @@ class OptionMenuItemMultilineStaticText : OptionMenuItemStaticText {
         }
 
         for (int i = m_emptyLinesBelow.Size() - 1; i >= 0; i--) {
-            menu.m_root.mItems.Delete(ourIdx + i + 1);
+            menu.m_root.mItems.Delete(ourIdx + 1 + i);
             m_emptyLinesBelow.Delete(i);
         }
 
@@ -246,29 +313,20 @@ class OptionMenuItemMultilineStaticText : OptionMenuItemStaticText {
 class OptionMenuItemRequiredMaterials : OptionMenuItemMultilineStaticText {
     void Init() {
         super.Init();
-    }
-
-    override Name, int GetAction() {
-        return "RequiredMaterials", 0;
+        mAction = "RequiredMaterials";
     }
 }
 
 class OptionMenuItemOwnedMaterials : OptionMenuItemMultilineStaticText {
     void Init() {
         super.Init();
-    }
-
-    override Name, int GetAction() {
-        return "OwnedMaterials", 0;
+        mAction = "OwnedMaterials";
     }
 }
 
 class OptionMenuItemCanCraft: OptionMenuItemStaticText {
     void Init() {
         super.Init("");
-    }
-
-    override Name, int GetAction() {
-        return "CanCraft", 0;
+        mAction = "CanCraft";
     }
 }

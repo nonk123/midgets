@@ -15,5 +15,5 @@ OptionMenu "CraftingMenu" {
     StaticText " "
 
     StaticText "Choose a recipe:"
-    StaticText " "
+    PlaceRecipesBelow
 }
