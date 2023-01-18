@@ -1,9 +1,16 @@
-$palettePath = 'sprites/Palette.png'
+$outputPath = $Args[0]
+
+$palettePath = "$outputPath\..\..\sprites\Palette.png"
 $ditherMethod = 'None'
 
-$files = Get-ChildItem -Recurse -Path 'models/renders'
+$files = Get-ChildItem -Recurse -Path $outputPath
 
 foreach ($file in $files) {
-    $fileName = $file.FullName
-    magick $fileName -dither $ditherMethod -remap $palettePath $fileName
+    if ($file -is [System.IO.FileInfo]) {
+        $fileName = $file.FullName
+
+        if ($fileName -like '*.png') {
+            magick $fileName -dither $ditherMethod -remap $palettePath $fileName
+        }
+    }
 }
