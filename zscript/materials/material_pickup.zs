@@ -3,7 +3,7 @@ class MaterialPickup : Inventory {
 
     override string PickupMessage() {
         let a = m_material.m_an ? "an" : "a";
-        return String.Format("You got %s %s!", a, m_material.m_name);
+        return String.Format("You found %s %s!", a, m_material.m_name);
     }
 
     override void AttachToOwner(Actor other) {
@@ -12,8 +12,9 @@ class MaterialPickup : Inventory {
         if (owner && owner is "MidgetPlayer") {
             let ownr = MidgetPlayer(owner);
             ownr.m_materials.Add(m_material);
-            Destroy();
         }
+
+        Destroy();
     }
 
     States {

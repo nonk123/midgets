@@ -17,15 +17,21 @@ class Recipe : Thinker {
         ChangeStatNum(STAT_STATIC);
     }
 
-    bool Craft(MidgetPlayer player) {
-        if (CanCraft(player)) {
-            TakeMaterials(player);
-            GiveResult(player);
+    clearscope int GetIndex() {
+        let it = ThinkerIterator.Create("Recipe", Thinker.STAT_STATIC);
+        Recipe recipe;
 
-            return true;
+        for (int i = 0; recipe = Recipe(it.Next()); i++) {
+            if (recipe == self) {
+                return i;
+            }
         }
 
-        return false;
+        return -1;
+    }
+
+    clearscope static Recipe GetEmpty() {
+        return Recipe(ThinkerIterator.Create("Recipe", Thinker.STAT_STATIC).Next());
     }
 
     virtual void TakeMaterials(MidgetPlayer player) {
@@ -90,7 +96,7 @@ class NoRecipe : Recipe {
 class RecipeType : Thinker abstract {
     static void Populate() {
         let noRecipe = new("NoRecipe");
-        noRecipe.Init("No recipes available in this category", "Inventory");
+        noRecipe.Init("No recipes available", "Inventory");
 
         for (int i = 0; i < AllClasses.Size(); i++) {
             let cls = AllClasses[i];
